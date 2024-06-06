@@ -1,0 +1,23 @@
+from pathlib import Path
+
+GLOBAL_MAX_SPEED = 45.0
+GLOBAL_MAX_LANE_LENGTH = 30000
+
+SPEED_NORMALIZATION = 15
+LANE_LENGTH_NORMALIZATION = 250
+
+TL_CYCLE_NORMALIZATION = 100
+MAX_TL_CYCLE = 600
+
+MOVES_ROAD_GRADE_RESOLUTION = 5
+
+REGULAR = "regular_guided_vehicles"
+ELECTRIC = "electric_guided_vehicles"
+
+GUI_SETTINGS_FILE = Path("resources/sumo_static/gui.xml")
+
+WHITE = (255, 255, 255)
+CYAN = (0, 255, 255)
+RED = (255, 0, 0)
+YELLOW = (255, 255, 51)
+GREEN = (0, 255, 0)
