@@ -2,8 +2,6 @@
   <img src="logo.png" width="600px" height="100px" alt="IntersectionZoo Logo">
 </p>
 
-# IntersectionZoo: Eco-driving for Benchmarking Multi-Agent Contextual Reinforcement Learning
-
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](https://github.com/mit-wu-lab/scenarioenv/blob/main/LICENSE)
 ![Static Badge](https://img.shields.io/badge/documentation-available-green)
