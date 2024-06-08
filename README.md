@@ -6,7 +6,7 @@
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](https://github.com/mit-wu-lab/scenarioenv/blob/main/LICENSE)
 ![Static Badge](https://img.shields.io/badge/documentation-available-green)
 
-The working documentation of IntersectionZoo can be found [here](https://greenwave-docs.readthedocs.io/en/latest/).
+The working documentation of IntersectionZoo can be found [here](https://intersectionzoo-docs.readthedocs.io/en/latest/).
 
 IntersectionZoo provides a multi-factorial eco-driving environment for benchmarking contextual reinforcement learning algorithms. IntersectionZoo is built to reflect the realistic version of the eco-driving problem by calibrating the environments to reflect realistic conditions. It is designed to be a flexible and easy-to-use tool for developing and comparing contextual reinforcement learning algorithms.
 
