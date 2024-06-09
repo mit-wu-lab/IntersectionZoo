@@ -10,7 +10,7 @@
 
 [IntersectionZoo](https://intersectionzoo-docs.readthedocs.io/en/latest/) is a cooperative eco-driving-based multi-agent reinforcement learning environment for benchmarking contextual reinforcement learning algorithms to assess their generalization capabilities. Additionally, it also aims to advance eco-driving research through standardized environments and benchmarking. 
 
-See our [documentation](https://intersectionzoo-docs.readthedocs.io/en/latest/) for more information on the application of IntersectionZoo. A comprehensive report of [benchmarking results]([https://sites.google.com/view/ieee-tro-flow/home](https://intersectionzoo-docs.readthedocs.io/en/latest/benchmarking.html)) are available in the documentation.
+See our [documentation](https://intersectionzoo-docs.readthedocs.io/en/latest/) for more information on the application of IntersectionZoo. A comprehensive report of [benchmarking results]([https://sites.google.com/view/ieee-tro-flow/home](https://intersectionzoo-docs.readthedocs.io/en/latest/benchmarking.html) is available in the documentation.
 
 # More information
 
