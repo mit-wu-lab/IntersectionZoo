@@ -8,9 +8,9 @@
 
 # IntersectionZoo
 
-[IntersectionZoo](https://intersectionzoo-docs.readthedocs.io/en/latest/)is a computational framework for deep RL and control experiments for traffic microsimulation.
+[IntersectionZoo](https://intersectionzoo-docs.readthedocs.io/en/latest/) is a cooperative eco-driving-based multi-agent reinforcement learning environment for benchmarking contextual reinforcement learning algorithms to assess their generalization. It also aims to advance eco-driving research through standardized environments and benchmarking. 
 
-See [our website](https://flow-project.github.io/) for more information on the application of Flow to several mixed-autonomy traffic scenarios. Other [results and videos](https://sites.google.com/view/ieee-tro-flow/home) are available as well.
+See our [documentation](https://intersectionzoo-docs.readthedocs.io/en/latest/) for more information on the application of IntersectionZoo. A comprehensive report of [benchmarking results]([https://sites.google.com/view/ieee-tro-flow/home](https://intersectionzoo-docs.readthedocs.io/en/latest/benchmarking.html)) are available in the documentation.
 
 # More information
 
@@ -18,6 +18,7 @@ See [our website](https://flow-project.github.io/) for more information on the a
 - [Installation instructions](https://intersectionzoo-docs.readthedocs.io/en/latest/)
 - [Tutorials](https://intersectionzoo-docs.readthedocs.io/en/latest/)
 - [Intersection SUMO network files](https://drive.google.com/drive/folders/1y3W83MPfnt9mSFGbg8L9TLHTXElXvcHs?usp=sharing)
+- [Benchmarking results](https://intersectionzoo-docs.readthedocs.io/en/latest/benchmarking.html)
 
 # Technical questions
 
