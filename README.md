@@ -15,8 +15,8 @@ See our [documentation](https://intersectionzoo-docs.readthedocs.io/en/latest/) 
 # More information
 
 - [Documentation](https://intersectionzoo-docs.readthedocs.io/en/latest/)
-- [Installation instructions](https://intersectionzoo-docs.readthedocs.io/en/latest/)
-- [Tutorials](https://intersectionzoo-docs.readthedocs.io/en/latest/)
+- [Installation instructions](https://intersectionzoo-docs.readthedocs.io/en/latest/usage.html#installation)
+- [Tutorials](https://intersectionzoo-docs.readthedocs.io/en/latest/tutorial.html)
 - [Intersection SUMO network files](https://drive.google.com/drive/folders/1y3W83MPfnt9mSFGbg8L9TLHTXElXvcHs?usp=sharing)
 - [Benchmarking results](https://intersectionzoo-docs.readthedocs.io/en/latest/benchmarking.html)
 
