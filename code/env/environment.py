@@ -57,16 +57,22 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
         super().__init__()
         self.config: IntersectionZooEnvConfig = config["intersectionzoo_env_config"]
         self.task_context: TaskContext | None = self.config.task_context
-        self.prefix: str = str(config.worker_index)
+        self.prefix: str = str(config.worker_index) if hasattr(config, "worker_index") else "0"
         self.traci = None
         self.traffic_state: Optional[TrafficState] = None
         self._curr_step = 0
         self.vehicle_metrics = defaultdict(lambda: defaultdict(lambda: []))
         self.uncontrolled_region_metrics = defaultdict(lambda: [])
         self.warmup_vehicles: Set[str] = set()
-        self._agent_ids: Set[str] = {'mock'}
+        self.agents: Set[str] = {0}
+        self._agent_ids = self.agents
+        self.max_num_agents = 1000
+        self.possible_agents = list(range(self.max_num_agents))
+        self.agents_id_mapping = {'mock': 0}
+        self.inverse_agents_id_mapping = {0: 'mock'}
+        self.num_agents_appeard = 1
 
-        self.action_space = (
+        self.action_spaces = defaultdict(lambda:
             GymDict(
                 {
                     # the boundaries of box are not followed, -20 and 10 should include all possible vehicle types
@@ -76,8 +82,9 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
                 }
             )
             if self.config.control_lane_change
-            else Box(low=-20, high=10, shape=(1,), dtype=np.float32)  
+            else Discrete(30)
         )
+        self.action_space = self.action_spaces[0]
 
         speed_space = Box(npa(0), npa(GLOBAL_MAX_SPEED / SPEED_NORMALIZATION))
 
@@ -92,7 +99,7 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
             }
         )
 
-        self.observation_space = GymDict(
+        self.observation_spaces = defaultdict(lambda: GymDict(
             {
                 "speed": speed_space,
                 "relative_distance": Box(
@@ -128,7 +135,21 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
                 "humidity": Box(npa(0), npa(100)),
                 "electric": Discrete(2),
             }
-        )
+        ))
+        self.observation_space = self.observation_spaces[0]
+
+    @property
+    def num_agents(self) -> int:
+        return len(self.agents)
+    
+    # def action_space(self, agent: AgentID = None) -> GymDict:
+    #     return self.action_spaces[agent]
+    
+    # def observation_space(self, agent: AgentID = None) -> GymDict:
+    #     return self.observation_spaces[agent]
+
+    def state(self) -> None:
+        raise NotImplementedError
 
     def reset(
         self,
@@ -157,7 +178,11 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
         self.vehicle_metrics = defaultdict(lambda: defaultdict(lambda: []))
         self.uncontrolled_region_metrics = defaultdict(lambda: [])
         self.warmup_vehicles = set()
-        self._agent_ids = {'mock'}
+        self.agents = {0}
+        self._agent_ids = self.agents
+        self.agents_id_mapping = {'mock': 0}
+        self.inverse_agents_id_mapping = {0: 'mock'}
+        self.num_agents_appeard = 1
 
         obs, _, _, _, _ = self.step({}, warmup=True)
         for _ in range(self.config.warmup_steps):
@@ -172,7 +197,8 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
     ]:
         if not warmup:
             for v_id, action in action_dict.items():
-                if v_id != 'mock':
+                if v_id != 0:
+                    v_id = self.inverse_agents_id_mapping[v_id]
                     vehicle = self.traffic_state.vehicles[v_id]
 
                     sumo_speed = self.traci.vehicle.getSpeedWithoutTraCI(v_id)
@@ -187,7 +213,7 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
                         if not is_internal_lane(vehicle.lane_id):
                             vehicle.change_lane_relative(action["lane_change"] - 1)
                         self.traffic_state.accel(
-                            vehicle, action["accel"][0], use_speed_factor=False
+                            vehicle, action["accel"]/5 - 3, use_speed_factor=False
                         )
                     else:
                         # We only apply RL accel to the vehicle if SUMO doesn't slow down the vehicle to do a lane change
@@ -195,7 +221,7 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
                         # diff with the speed SUMO actually wants to apply.
                         if abs(diff) < 0.5 or abs(sumo_speed - vehicle.speed) < 0.5:
                             self.traffic_state.accel(
-                                vehicle, action[0], use_speed_factor=False
+                                vehicle, action/5-3, use_speed_factor=False
                             )
 
                     # color vehicles according to whether they'll turn at the intersection
@@ -210,22 +236,35 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
 
         reward = self._get_reward(action_dict.keys())
 
-        self._agent_ids = {
+        for v_id in self.traffic_state.current_vehicles:
+            if v_id not in self.agents_id_mapping:
+                if self.num_agents_appeard >= self.max_num_agents:
+                    raise NotImplementedError("Too many agents appeared")
+                self.agents_id_mapping[v_id] = self.num_agents_appeard
+                self.inverse_agents_id_mapping[self.num_agents_appeard] = v_id
+                self.num_agents_appeard += 1
+
+        self.agents = {
+            self.agents_id_mapping[v_id]
+            for v_id, vehicle in self.traffic_state.current_vehicles.items()
+            if vehicle.is_rl
+        }.union({0})
+        self._agent_ids = self.agents
+
+        obs = self._get_obs({
             v_id
             for v_id, vehicle in self.traffic_state.current_vehicles.items()
             if vehicle.is_rl
-        }.union({'mock'})
-
-        obs = self._get_obs(self._agent_ids)
+        }.union({'mock'}))
 
         v_finished_during_step = {
-            v_id for v_id in action_dict.keys() if v_id not in self._agent_ids
+            v_id for v_id in action_dict.keys() if v_id not in self.agents
         }
 
         # We consider the simulation over is too many vehicles are present, and they are too slow
         if (
             not warmup
-            and len(self._agent_ids) > 150
+            and len(self.agents) > 150
             and self._get_average_speed() < 0.5
         ):
             termination = True
@@ -241,7 +280,7 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
             truncation = False
 
         terminated = {
-            **{v_id: termination for v_id in self._agent_ids},
+            **{v_id: termination for v_id in self.agents},
             **{v_id: True for v_id in v_finished_during_step},
         }
         terminated["__all__"] = termination
@@ -251,7 +290,6 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
         #     self._agent_ids.add('mock')
         # elif self._curr_step == self.config.warmup_steps + 1:
         #     return self.observation_space_sample(), {'mock': 0}, {'mock': True}, {'mock': False}, {}
-
         return obs, reward, terminated, truncated, {}
 
     def close(self):
@@ -843,10 +881,10 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
         self.task_context = task
 
     def action_space_sample(self, agent_ids: list = None) -> MultiAgentDict:
-        return {v_id: self.action_space.sample() for v_id in self._agent_ids}
+        return {v_id: self.action_space.sample() for v_id in self.agents}
 
     def observation_space_sample(self, agent_ids: list = None) -> MultiEnvDict:
-        return {v_id: self.observation_space.sample() for v_id in self._agent_ids}
+        return {v_id: self.observation_space.sample() for v_id in self.agents}
 
     def action_space_contains(self, x: MultiAgentDict) -> bool:
         return all(self.action_space.contains(v) for v in x.values())
@@ -866,7 +904,7 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
     def _get_obs(self, current_rl_vehicle_list: set[str]) -> Dict[AgentID, dict]:
         time = self.traffic_state.traci_module.simulation.getTime()
         return {
-            vehicle_id: self._get_vehicle_obs(
+            self.agents_id_mapping[vehicle_id]: self._get_vehicle_obs(
                 self.traffic_state.vehicles[vehicle_id], time
             ) if vehicle_id != 'mock' else self.observation_space.sample()
             for vehicle_id in current_rl_vehicle_list
@@ -1023,10 +1061,11 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
         num_stopped_vehicles = 0
 
         for v_id in vehicle_list:
-            if v_id == 'mock':
+            real_v_id = self.inverse_agents_id_mapping[v_id]
+            if real_v_id == 'mock':
                 result[v_id] = 0
             else:
-                vehicle = self.traffic_state.vehicles[v_id]
+                vehicle = self.traffic_state.vehicles[real_v_id]
                 num_stopped_vehicles += vehicle.speed < self.config.threshold
                 result[v_id] = (
                     fleet_rewards[vehicle.platoon][vehicle.lane_index]
