@@ -35,6 +35,12 @@ from env.task_context import PathTaskContext
 from env.rllib_callback import MetricsCallback
 import pufferlib.emulation
 import pufferlib.wrappers
+from ray.tune.registry import register_env
+from ray.rllib.models import ModelCatalog
+from ray.rllib.examples._old_api_stack.models.centralized_critic_models import (
+    TorchCentralizedCriticModel,
+)
+from algorithm.mappo import CentralizedCritic
 
 parser = argparse.ArgumentParser(description='Model arguments')
 parser.add_argument('--dir', default='/Users/bfreydt/MIT_local/IntersectionZoo/wd/new_exp', type=str, help='Result directory')
@@ -71,29 +77,34 @@ env_conf = IntersectionZooEnvConfig(
     fleet_reward_ratio=1,
 )
 
-def postprocess_fn(policy, sample_batch, other_agent_batches, episode):
-    agents = ["agent_1", "agent_2", "agent_3"]  # simple example of 3 agents
-    global_obs_batch = np.stack(
-        [other_agent_batches[agent_id][1]["obs"] for agent_id in agents],
-        axis=1)
-    # add the global obs and global critic value
-    sample_batch["global_obs"] = global_obs_batch
-    sample_batch["central_vf"] = self.sess.run(
-        self.critic_network, feed_dict={"obs": global_obs_batch})
-    return sample_batch
+# def postprocess_fn(policy, sample_batch, other_agent_batches, episode):
+#     agents = ["agent_1", "agent_2", "agent_3"]  # simple example of 3 agents
+#     global_obs_batch = np.stack(
+#         [other_agent_batches[agent_id][1]["obs"] for agent_id in agents],
+#         axis=1)
+#     # add the global obs and global critic value
+#     sample_batch["global_obs"] = global_obs_batch
+#     sample_batch["central_vf"] = self.sess.run(
+#         self.critic_network, feed_dict={"obs": global_obs_batch})
+#     return sample_batch
 
-from ray.tune.registry import register_env
 
 register_env("my_env", lambda config: pufferlib.emulation(env=IntersectionZooEnv(config)))
 
 def curriculum_fn(train_results, task_settable_env, env_ctx):
     return tasks.sample_task()
 
+ModelCatalog.register_custom_model(
+        "cc_model",
+        TorchCentralizedCriticModel,
+    )
+
 algo = (
     PPOConfig()
     .rollouts(num_rollout_workers=args.num_workers, sample_timeout_s=3600, \
         batch_mode="complete_episodes", rollout_fragment_length=400)
     .resources(num_gpus=args.num_gpus)
+    .training(model={"custom_model": "cc_model"})
     .evaluation(evaluation_num_workers=1, evaluation_duration=1, \
         evaluation_duration_unit='episodes', evaluation_force_reset_envs_before_iteration=True)
     .environment(
@@ -107,7 +118,7 @@ algo = (
 
 for i in range(args.rollouts):
     
-    result = algo.train()
+    result = CentralizedCritic(algo).train()
     
     print(f"iteration {i} completed.")
     

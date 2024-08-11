@@ -23,20 +23,13 @@ modifies the environment.
 import numpy as np
 from ray.air.constants import TRAINING_ITERATION
 from ray.rllib.algorithms.ppo.ppo import PPO
-from ray.rllib.algorithms.ppo.ppo_tf_policy import (
-    PPOTF1Policy,
-    PPOTF2Policy,
-)
 from ray.rllib.algorithms.ppo.ppo_torch_policy import PPOTorchPolicy
 from ray.rllib.evaluation.postprocessing import compute_advantages, Postprocessing
 from ray.rllib.policy.sample_batch import SampleBatch
 from ray.rllib.utils.annotations import override
-from ray.rllib.utils.framework import try_import_tf, try_import_torch
-from ray.rllib.utils.numpy import convert_to_numpy
-from ray.rllib.utils.tf_utils import explained_variance, make_tf_callable
+from ray.rllib.utils.framework import try_import_torch
 from ray.rllib.utils.torch_utils import convert_to_torch_tensor
 
-tf1, tf, tfv = try_import_tf()
 torch, nn = try_import_torch()
 
 OPPONENT_OBS = "opponent_obs"
@@ -47,12 +40,7 @@ class CentralizedValueMixin:
     """Add method to evaluate the central value function from the model."""
 
     def __init__(self):
-        if self.config["framework"] != "torch":
-            self.compute_central_vf = make_tf_callable(self.get_session())(
-                self.model.central_value_function
-            )
-        else:
-            self.compute_central_vf = self.model.central_value_function
+        self.compute_central_vf = self.model.central_value_function
 
 
 # Grabs the opponent obs/act and includes it in the experience train_batch,
@@ -60,10 +48,7 @@ class CentralizedValueMixin:
 def centralized_critic_postprocessing(
     policy, sample_batch, other_agent_batches=None, episode=None
 ):
-    pytorch = policy.config["framework"] == "torch"
-    if (pytorch and hasattr(policy, "compute_central_vf")) or (
-        not pytorch and policy.loss_initialized()
-    ):
+    if hasattr(policy, "compute_central_vf"):
         assert other_agent_batches is not None
         if policy.config["enable_connectors"]:
             [(_, _, opponent_batch)] = list(other_agent_batches.values())
@@ -75,29 +60,21 @@ def centralized_critic_postprocessing(
         sample_batch[OPPONENT_ACTION] = opponent_batch[SampleBatch.ACTIONS]
 
         # overwrite default VF prediction with the central VF
-        if args.framework == "torch":
-            sample_batch[SampleBatch.VF_PREDS] = (
-                policy.compute_central_vf(
-                    convert_to_torch_tensor(
-                        sample_batch[SampleBatch.CUR_OBS], policy.device
-                    ),
-                    convert_to_torch_tensor(sample_batch[OPPONENT_OBS], policy.device),
-                    convert_to_torch_tensor(
-                        sample_batch[OPPONENT_ACTION], policy.device
-                    ),
-                )
-                .cpu()
-                .detach()
-                .numpy()
+        
+        sample_batch[SampleBatch.VF_PREDS] = (
+            policy.compute_central_vf(
+                convert_to_torch_tensor(
+                    sample_batch[SampleBatch.CUR_OBS], policy.device
+                ),
+                convert_to_torch_tensor(sample_batch[OPPONENT_OBS], policy.device),
+                convert_to_torch_tensor(
+                    sample_batch[OPPONENT_ACTION], policy.device
+                ),
             )
-        else:
-            sample_batch[SampleBatch.VF_PREDS] = convert_to_numpy(
-                policy.compute_central_vf(
-                    sample_batch[SampleBatch.CUR_OBS],
-                    sample_batch[OPPONENT_OBS],
-                    sample_batch[OPPONENT_ACTION],
-                )
-            )
+            .cpu()
+            .detach()
+            .numpy()
+        )
     else:
         # Policy hasn't been initialized yet, use zeros.
         sample_batch[OPPONENT_OBS] = np.zeros_like(sample_batch[SampleBatch.CUR_OBS])
