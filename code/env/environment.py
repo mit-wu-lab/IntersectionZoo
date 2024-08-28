@@ -57,7 +57,7 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
         super().__init__()
         self.config: IntersectionZooEnvConfig = config["intersectionzoo_env_config"]
         self.task_context: TaskContext | None = self.config.task_context
-        self.prefix: str = str(config.worker_index)
+        self.prefix: str = str(config.worker_index) if hasattr(config, "worker_index") else ""
         self.traci = None
         self.traffic_state: Optional[TrafficState] = None
         self._curr_step = 0
