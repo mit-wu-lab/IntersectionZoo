@@ -30,10 +30,10 @@ from ray.rllib.algorithms.algorithm import Algorithm
 from sumo.constants import REGULAR
 
 parser = argparse.ArgumentParser(description='Model arguments')
-parser.add_argument('--dir', default='/home/gridsan/vindula/neurips24/scenarioenv', type=str, help='Result directory')
-parser.add_argument('--intersection_dir', default='/home/gridsan/vindula/neurips24/scenarioenv/dataset/test', type=str, help='Path to intersection dataset')
+parser.add_argument('--dir', default='wd/ppo_run', type=str, help='Result directory')
+parser.add_argument('--intersection_dir', default='dataset/salt-lake-city', type=str, help='Path to intersection dataset')
 parser.add_argument('--num_workers', default=5, type=str, help='Number of workers')
-parser.add_argument('--checkpoint', default='/home/gridsan/vindula/neurips24/scenarioenv/wd/ppo_run/runs/0/20240530_2354', type=str, help='Checkpoint path')
+parser.add_argument('--checkpoint', default='/wd/ppo_run/runs/0/20240530_2354', type=str, help='Checkpoint path')
 parser.add_argument('--eval_per_task', default=3, type=str, help='How many times to evaluate each task')
 
 parser.add_argument('--penetration', default=1.0, type=str, help='Eco drive adoption rate')
@@ -41,6 +41,8 @@ parser.add_argument('--temperature_humidity', default='20_50', type=str, help='T
 
 args = parser.parse_args()
 print(args)
+
+Path(args.dir).mkdir(parents=True, exist_ok=True)
 
 ray.init(ignore_reinit_error=True, num_cpus=args.num_workers + 15)
 

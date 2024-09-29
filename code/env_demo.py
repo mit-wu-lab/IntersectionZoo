@@ -8,13 +8,15 @@ from env.environment import IntersectionZooEnv
 from sumo.constants import REGULAR
 
 parser = argparse.ArgumentParser(description='Demo run arguments')
-parser.add_argument('--dir', default='/Users/bfreydt/MIT_local/IntersectionZoo/wd/new_exp', type=str, help='Result directory')
-parser.add_argument('--intersection_dir', default='/Users/bfreydt/MIT_local/IntersectionZoo/dataset/salt-lake-city', type=str, help='Path to intersection dataset')
+parser.add_argument('--dir', default='wd/new_exp', type=str, help='Result directory')
+parser.add_argument('--intersection_dir', default='dataset/salt-lake-city', type=str, help='Path to intersection dataset')
 parser.add_argument('--penetration', default=0.33, type=str, help='Eco drive adoption rate')
 parser.add_argument('--temperature_humidity', default='68_46', type=str, help='Temperature and humidity for evaluations')
 
 args = parser.parse_args()
 print(args)
+
+Path(args.dir).mkdir(parents=True, exist_ok=True)
 
 tasks = PathTaskContext(
     dir=Path(args.intersection_dir),                    
@@ -29,6 +31,7 @@ env_conf = IntersectionZooEnvConfig(
     working_dir=Path(args.dir),
     moves_emissions_models=[args.temperature_humidity],
     fleet_reward_ratio=1,
+    visualize_sumo=True,
 )
 
 # Create the environment
@@ -64,7 +67,6 @@ while not terminated["__all__"]:
     # Print the observations and reward
     print("Observations:", filter_obs(obs))
     print("Reward:", filter_rew(reward))
-    input("Press Enter to continue...")
 
 # Close the environment
 env.close()

@@ -36,7 +36,7 @@ from env.rllib_callback import MetricsCallback
 parser = argparse.ArgumentParser(description='Model arguments')
 parser.add_argument('--dir', default='wd/new_exp', type=str, help='Result directory')
 parser.add_argument('--wandb_project', default='intersectionzoo-synthetic', type=str, help='Weights and biases project name')
-parser.add_argument('--wandb_entity', default='vindula', type=str, help='Weights and biases entity name')
+parser.add_argument('--wandb_entity', default='run_1', type=str, help='Weights and biases entity name')
 parser.add_argument('--num_workers', default=10, type=str, help='Number of workers')
 parser.add_argument('--num_gpus', default=0, type=str, help='Number of GPUs')
 parser.add_argument('--save_frequency', default=5, type=str, help='Frequency of saving checkpoints')
@@ -47,6 +47,8 @@ parser.add_argument('--temperature_humidity', default='68_46', type=str, help='T
 
 args = parser.parse_args()
 print(args)
+
+Path(args.dir).mkdir(parents=True, exist_ok=True)
 
 wandb.init(project=args.wandb_project, entity=args.wandb_entity)
 
