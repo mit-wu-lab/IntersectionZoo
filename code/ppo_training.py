@@ -37,7 +37,6 @@ parser = argparse.ArgumentParser(description='Model arguments')
 parser.add_argument('--dir', default='wd/new_exp', type=str, help='Result directory')
 parser.add_argument('--intersection_dir', default='dataset/salt-lake-city', type=str, help='Path to intersection dataset')
 parser.add_argument('--wandb_project', default='intersectionzoo', type=str, help='Weights and biases project name')
-parser.add_argument('--wandb_entity', default='run_1', type=str, help='Weights and biases entity name')
 parser.add_argument('--num_workers', default=10, type=str, help='Number of workers')
 parser.add_argument('--num_gpus', default=1, type=str, help='Number of GPUs')
 parser.add_argument('--save_frequency', default=5, type=str, help='Frequency of saving checkpoints')
@@ -51,7 +50,7 @@ print(args)
 
 Path(args.dir).mkdir(parents=True, exist_ok=True)
 
-wandb.init(project=args.wandb_project, entity=args.wandb_entity)
+wandb.init(project=args.wandb_project)
 
 ray.init(ignore_reinit_error=True, num_cpus=args.num_workers + 15)
 
