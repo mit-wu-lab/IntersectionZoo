@@ -38,6 +38,7 @@ parser.add_argument('--eval_per_task', default=3, type=str, help='How many times
 
 parser.add_argument('--penetration', default=1.0, type=str, help='Eco drive adoption rate')
 parser.add_argument('--temperature_humidity', default='20_50', type=str, help='Temperature and humidity for evaluations')
+parser.add_argument('--visualize', default=False, type=bool, help='Visualize the agents in SUMO.')
 
 args = parser.parse_args()
 print(args)
@@ -70,10 +71,13 @@ res_df = pd.DataFrame()
 
 for i, task in enumerate(tasks.list_tasks(False)):
     for _ in range(args.eval_per_task):
+        def edit_env(env):
+            env.force_visualize = args.visualize
+            env.set_task(task)
     
         algo.evaluation_workers.foreach_worker(
                 lambda ev: ev.foreach_env(
-                    lambda env: env.set_task(task)))
+                    lambda env: edit_env(env)))
         results = algo.evaluate()
 
         flattened_results = {**flatten_dict(results)}
