@@ -39,7 +39,7 @@ class IntersectionZooEnvConfig(NamedTuple):
     logging: bool = True
     """ Verbose logging """
     visualize_sumo: bool = False
-    """ whether to use SUMO's GUI, doesn't always work very well with Ray"""
+    """ whether to use SUMO's GUI"""
     moves_output: Optional[Path] = None
     """ If specified exports vehicle trajectories in the given dir to be processed by MOVES to get accurate emissions"""
     trajectories_output: bool = False

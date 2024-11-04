@@ -65,6 +65,7 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
         self.uncontrolled_region_metrics = defaultdict(lambda: [])
         self.warmup_vehicles: Set[str] = set()
         self._agent_ids: Set[str] = {'mock'}
+        self.force_visualize = False
 
         self.action_space = (
             GymDict(
@@ -140,7 +141,7 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
         """
         super().reset(seed=seed, options=options)
         self.traci = start_sumo(
-            self.config,
+            self.config.update({"visualize_sumo": True}) if self.force_visualize else self.config,
             self.traci,
             self.prefix,
             self.get_task(),
