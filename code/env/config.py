@@ -66,6 +66,8 @@ class IntersectionZooEnvConfig(NamedTuple):
     Number of Warmup steps at the beginning of the episode
     where vehicles are not controlled and metrics not collected
     """
+    action_noise_sigma: float = 0
+    """ Standard deviation of the action noise. The action noise is sample from a guassian and multipled by the intended acceleration."""
 
     ### Reward
     stop_penalty: Optional[float] = 35

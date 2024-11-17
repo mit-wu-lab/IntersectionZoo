@@ -62,6 +62,9 @@ class VehicleTypeParamsSampler:
         }
 
     def sample_idm_params(self, v_type_id: str) -> Dict[str, str]:
+        """
+        Samples the vehicle attributes for each vehicle based on the vehicle type.
+        """
         return {
             "speedFactor": "1",
             "carFollowModel": "IDM",

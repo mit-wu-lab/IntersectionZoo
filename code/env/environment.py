@@ -194,9 +194,10 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
                         # We only apply RL accel to the vehicle if SUMO doesn't slow down the vehicle to do a lane change
                         # We identify if SUMO slows down to do lane change by computing theoretical IDM speed, and taking the
                         # diff with the speed SUMO actually wants to apply.
+                        action_noise = random.normalvariate(1, self.config.action_noise_sigma)
                         if abs(diff) < 0.5 or abs(sumo_speed - vehicle.speed) < 0.5:
                             self.traffic_state.accel(
-                                vehicle, action[0], use_speed_factor=False
+                                vehicle, action[0] * action_noise, use_speed_factor=False
                             )
 
                     # color vehicles according to whether they'll turn at the intersection
