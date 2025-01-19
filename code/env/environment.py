@@ -1002,7 +1002,15 @@ class IntersectionZooEnv(MultiAgentEnv, TaskSettableEnv):
 
             speed = veh.speed
             threshold = self.config.threshold
-            emission = 0
+            emission = self.traffic_state.fuel_emissions_models.get_emissions_single_condition(
+                                        veh.emissions_type,
+                                        veh.speed,
+                                        veh.accel,
+                                        veh.slope,
+                                        self.task_context.temperature_humidity,
+                                        self.task_context.electric_or_regular,
+                                        is_rl(veh.id)
+            )
 
             if self.config.stop_penalty is not None and speed < threshold:
                 penalty += self.config.stop_penalty * (threshold - speed) / threshold
